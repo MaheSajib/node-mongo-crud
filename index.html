@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+        integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <title>Mongodb</title>
+</head>
+
+<body class="">
+    <h1 class="text-center"> MongoDb Database.</h1>
+
+    
+
+    <div style="width: 250px; margin-left: 40%; " >
+        <form   action="/addProduct" method="post">
+            <div class="mb-3">
+                <input class="form-control" type="text" placeholder="name" name="name">
+            </div>
+            <br>
+            <div class="mb-3">
+                <input class="form-control" type="text" placeholder="price" name="price">
+            </div>
+            <br>
+            <div class="mb-3">
+                <input class="form-control" type="text" placeholder="quantity" name="quantity">
+            </div>
+            <br>
+            <div class="mb-3">
+                <button class="btn btn-success form-control" type="submit">Add Product</button>
+            </div>
+        </form>
+    </div>
+
+    <br><br>
+
+    <div style="width: 800px; margin-left: 30%;" id="products">
+    </div>
+    <div style="width: 800px; margin-left: 30%;" id="update">
+    </div>
+    <script>
+        function loadAllProducts() {
+            fetch('/products')
+                .then(res => res.json())
+                .then(products => {
+                    console.log(products)
+                    const container = document.getElementById('products');
+                    container.innerHTML = '';
+                    console.log(container);
+                    products.forEach(pd => {
+                        const p = document.createElement('p');
+                        p.innerHTML = ` <strong>${pd.name}</strong> -- Price ${pd.price} Quantity ${pd.quantity}
+                <button class="btn btn-warning" onclick="loadProduct('${pd._id}')">Update</button>    
+                <button class="btn btn-danger" onclick="deleteProduct(event, '${pd._id}')">Delete</button>
+                `;
+                        container.appendChild(p);
+                    });
+                })
+        }
+        loadAllProducts();
+
+        function loadProduct(id) {
+            fetch(`product/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    const update = document.getElementById('update');
+                    update.innerHTML = `
+                    <br>
+                <h3>Update: ${data._id}</h3>
+                Price: <input class="form-control" type="text" value="${data.price}" id="price">
+                <br>
+                Quantity: <input class="form-control" type="text" value="${data.quantity}" id="quantity">
+                <br>
+                <button class="form-control btn btn-primary" onclick="updateProduct('${data._id}')">Submit</button>
+                `;
+                })
+        }
+
+        function updateProduct(id) {
+            const price = document.getElementById('price').value;
+            const quantity = document.getElementById('quantity').value;
+            const product = { id, price, quantity };
+            fetch(`/update/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product),
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (result) {
+                        loadAllProducts();
+                        document.getElementById('update').innerHTML = '';
+                    }
+                })
+        }
+
+        function deleteProduct(event, id) {
+            fetch(`/delete/${id}`, {
+                method: 'DELETE'
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (result) {
+                        event.target.parentNode.style.display = "none";
+                    }
+                })
+        }
+
+    </script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
